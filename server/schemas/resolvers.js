@@ -45,11 +45,29 @@ const resolvers = {
       const token = signToken(user);
       return { token, user };
     },
-    saveBook: async () => {
-
+    saveBook: async (parent, { user, body }) => {
+      
+      try {
+        const updateUser = await User.findOneAndUpdate(
+          { _id: user._id },
+          { $addToSet: { savedBooks: body } },
+          { new: true, runvalidators: true }
+        )
+        return updateUser;
+      } catch (err) {
+        return err;
+      }
     },
-    removeBook: async () => {
-        
+    removeBook: async (parent, { user, params }) => {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: user._id }, 
+          { $pull: { savedBooks: { bookId: params.bookId} } },
+          { new: true } 
+        )
+        if (!updatedUser) {
+          return res.status(404).json({ message: "Couldn't find user with this id!" })
+        }
+        return updatedUser;
     }
     
   }
